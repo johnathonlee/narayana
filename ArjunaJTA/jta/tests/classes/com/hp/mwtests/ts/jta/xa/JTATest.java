@@ -40,6 +40,7 @@ import javax.transaction.xa.Xid;
 import org.junit.Test;
 
 public class JTATest {
+
 	@Test
 	public void test() throws Exception {
 
@@ -51,17 +52,24 @@ public class JTATest {
 		javax.transaction.Transaction theTransaction = tm.getTransaction();
 
 		assertTrue(theTransaction.enlistResource(new XARMERRXAResource(false)));
-		assertTrue(theTransaction.enlistResource(new XARMERRXAResource(true)));
+		XARMERRXAResource rollbackCalled = new XARMERRXAResource(true);
+		assertTrue(theTransaction.enlistResource(rollbackCalled));
 
 		tm.rollback();
+		assertTrue(rollbackCalled.getRollbackCalled());
 	}
 
 	private class XARMERRXAResource implements XAResource {
 
 		private boolean returnRMERROutOfEnd;
+		private boolean rollbackCalled;
 
 		public XARMERRXAResource(boolean returnRMERROutOfEnd) {
 			this.returnRMERROutOfEnd = returnRMERROutOfEnd;
+		}
+
+		public boolean getRollbackCalled() {
+			return rollbackCalled;
 		}
 
 		@Override
@@ -109,8 +117,7 @@ public class JTATest {
 
 		@Override
 		public void rollback(Xid xid) throws XAException {
-			// TODO Auto-generated method stub
-
+			rollbackCalled = true;
 		}
 
 		@Override
